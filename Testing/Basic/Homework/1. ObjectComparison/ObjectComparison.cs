@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using FluentAssertions;
+using NUnit.Framework;
 using NUnit.Framework.Legacy;
 
 namespace HomeExercise.Tasks.ObjectComparison;
@@ -6,7 +7,7 @@ public class ObjectComparison
 {
     [Test]
     [Description("Проверка текущего царя")]
-    [Category("ToRefactor")]
+    [Category("Refactored")]
     public void CheckCurrentTsar()
     {
         var actualTsar = TsarRegistry.GetCurrentTsar();
@@ -15,15 +16,16 @@ public class ObjectComparison
             new Person("Vasili III of Russia", 28, 170, 60, null));
 
         // Перепишите код на использование Fluent Assertions.
-        ClassicAssert.AreEqual(actualTsar.Name, expectedTsar.Name);
-        ClassicAssert.AreEqual(actualTsar.Age, expectedTsar.Age);
-        ClassicAssert.AreEqual(actualTsar.Height, expectedTsar.Height);
-        ClassicAssert.AreEqual(actualTsar.Weight, expectedTsar.Weight);
-
-        ClassicAssert.AreEqual(expectedTsar.Parent!.Name, actualTsar.Parent!.Name);
-        ClassicAssert.AreEqual(expectedTsar.Parent.Age, actualTsar.Parent.Age);
-        ClassicAssert.AreEqual(expectedTsar.Parent.Height, actualTsar.Parent.Height);
-        ClassicAssert.AreEqual(expectedTsar.Parent.Parent, actualTsar.Parent.Parent);
+        actualTsar.Should().BeEquivalentTo(expectedTsar, options =>
+            options.Excluding(person => person.Id)
+                   .Excluding(person => person.Parent.Id)
+            );
+        // Недостатки подхода CustomEquality по сравнению с решением выше в том что
+        // 1. Используется проверка на истинность AreEqual, в случае ошибки покажет только то что AreEqual вернуло False
+        // 2. Кастомный Ассерт ниже нерасширяем, при попытке добавить новое поле в класс придётся переписывать его
+        // 3. Читаемость гораздо хуже, в ассерте могла быть пропущена проверка поля и внешне он выглядел бы также,
+        // а значит чтобы понять что пытаемся проверить пришлось бы читать весь код
+        // 4. Код выше короче
     }
 
     [Test]
